@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Idle Pro - Saat Kasma (Çoklu Hesap & QR Giriş)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #111827;
+            --card: rgba(17, 24, 39, 0.85);
+            --steam-blue: #1b9fff;
+            --steam-dark: #1a3a5c;
+            --accent: #66c0f4;
+            --accent2: #c7d5e0;
+            --green: #4ade80;
+            --red: #f87171;
+            --orange: #fb923c;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --border: rgba(102, 192, 244, 0.18);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Background */
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background-image:
+                linear-gradient(rgba(102, 192, 244, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 192, 244, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px; pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background: radial-gradient(ellipse at 30% 20%, rgba(27, 159, 255, 0.08) 0%, transparent 60%),
+                        radial-gradient(ellipse at 70% 80%, rgba(102, 192, 244, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            max-width: 840px; margin: 0 auto; padding: 24px 18px;
+        }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 22px; }
+
+        .header .logo-row {
+            display: inline-flex; align-items: center; gap: 14px; margin-bottom: 6px;
+        }
+
+        .header .logo-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--steam-blue), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 25px rgba(27, 159, 255, 0.35);
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem; font-weight: 900; letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--steam-blue), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .header p { color: var(--text2); font-size: 0.85rem; }
+
+        /* Master Controls Bar */
+        .master-bar {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
+            border-radius: 14px; padding: 12px 18px; margin-bottom: 18px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .master-title {
+            font-family: 'Orbitron', monospace; font-size: 0.8rem; font-weight: 700;
+            color: var(--accent); display: flex; align-items: center; gap: 8px;
+        }
+
+        .master-btns { display: flex; gap: 8px; }
+
+        .btn-master {
+            padding: 8px 14px; border-radius: 8px; border: none;
+            font-family: 'Orbitron', monospace; font-size: 0.72rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+        }
+
+        .btn-master-start {
+            background: linear-gradient(135deg, var(--steam-blue), var(--accent));
+            color: #fff; box-shadow: 0 2px 10px rgba(27, 159, 255, 0.25);
+        }
+
+        .btn-master-start:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+        .btn-master-stop {
+            background: rgba(248, 113, 113, 0.15); color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .btn-master-stop:hover { background: rgba(248, 113, 113, 0.25); }
+
+        /* Multi-Account Bar */
+        .accounts-bar {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;
+            margin-bottom: 18px;
+        }
+
+        .accounts-bar::-webkit-scrollbar { height: 4px; }
+        .accounts-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .acc-tab {
+            padding: 8px 16px; border-radius: 10px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08); font-size: 0.82rem; font-weight: 600;
+            color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 8px;
+            white-space: nowrap; transition: all 0.2s;
+        }
+
+        .acc-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); border-color: var(--border); }
+
+        .acc-tab.active {
+            background: rgba(27, 159, 255, 0.12); color: var(--steam-blue);
+            border-color: var(--steam-blue); box-shadow: 0 0 12px rgba(27, 159, 255, 0.15);
+        }
+
+        .acc-tab-add {
+            background: rgba(102, 192, 244, 0.08); border: 1px dashed var(--border);
+            color: var(--accent); font-family: 'Orbitron', monospace; font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .acc-tab-add:hover { background: var(--accent); color: #000; }
+
+        /* Card */
+        .card {
+            background: var(--card); backdrop-filter: blur(16px);
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 22px; margin-bottom: 18px;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover { border-color: rgba(102, 192, 244, 0.35); }
+
+        .card-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--accent);
+            margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+        }
+
+        .card-title::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+
+        /* Dual Login Layout */
+        .login-dual-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+
+        @media (max-width: 680px) {
+            .login-dual-grid { grid-template-columns: 1fr; }
+        }
+
+        .login-sub-box {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px; padding: 20px; text-align: center;
+        }
+
+        .qr-box {
+            width: 210px; height: 210px; margin: 12px auto; background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border); border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; position: relative; overflow: hidden;
+        }
+
+        .qr-box img { width: 100%; height: 100%; display: block; border-radius: 10px; }
+
+        .qr-scan-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            box-shadow: 0 0 8px var(--accent); animation: scanLine 2s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 7px 16px; border-radius: 30px; font-size: 0.78rem; font-weight: 600;
+        }
+
+        .status-badge.offline {
+            background: rgba(248, 113, 113, 0.12); color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.25);
+        }
+
+        .status-badge.online {
+            background: rgba(74, 222, 128, 0.12); color: var(--green);
+            border: 1px solid rgba(74, 222, 128, 0.25);
+        }
+
+        .status-badge.idling {
+            background: rgba(27, 159, 255, 0.12); color: var(--steam-blue);
+            border: 1px solid rgba(27, 159, 255, 0.25);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(27, 159, 255, 0); }
+            50% { box-shadow: 0 0 15px rgba(27, 159, 255, 0.25); }
+        }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .offline .status-dot { background: var(--red); }
+        .online .status-dot { background: var(--green); animation: blink 2s infinite; }
+        .idling .status-dot { background: var(--steam-blue); animation: blink 1.2s infinite; }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Form elements */
+        .form-group { margin-bottom: 14px; text-align: left; }
+
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            color: var(--text2); margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%; padding: 12px 14px; border-radius: 10px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text); font-size: 0.92rem; font-family: 'Inter', sans-serif;
+            outline: none; transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(102, 192, 244, 0.12);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 13px 22px; border: none; border-radius: 10px;
+            font-family: 'Orbitron', monospace; font-size: 0.82rem;
+            font-weight: 700; letter-spacing: 1.5px; cursor: pointer;
+            transition: all 0.25s; text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 8px;
+            justify-content: center; width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--steam-blue), var(--accent));
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27, 159, 255, 0.35);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.14); color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+        }
+
+        .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+        /* Games grid */
+        .games-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; margin-bottom: 14px;
+        }
+
+        .games-grid::-webkit-scrollbar { width: 4px; }
+        .games-grid::-webkit-scrollbar-thumb { background: rgba(102,192,244,0.25); border-radius: 4px; }
+
+        .game-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 8px;
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer; transition: all 0.2s; user-select: none;
+        }
+
+        .game-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+
+        .game-item.selected {
+            background: rgba(27, 159, 255, 0.12); border-color: var(--steam-blue);
+        }
+
+        .game-check {
+            width: 18px; height: 18px; border-radius: 5px;
+            border: 2px solid rgba(255,255,255,0.2); display: flex;
+            align-items: center; justify-content: center; font-size: 11px;
+            flex-shrink: 0; transition: all 0.2s;
+        }
+
+        .game-item.selected .game-check {
+            background: var(--steam-blue); border-color: var(--steam-blue); color: #fff;
+        }
+
+        .game-item.selected .game-check::after { content: '✓'; }
+
+        .game-label { font-size: 0.82rem; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .game-id { font-size: 0.7rem; color: var(--text2); font-family: 'Orbitron', monospace; }
+
+        /* Custom App ID input */
+        .custom-appid {
+            display: flex; gap: 8px; margin-top: 10px;
+        }
+
+        .custom-appid input {
+            flex: 1; padding: 10px 14px; border-radius: 8px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text); font-size: 0.85rem; outline: none;
+        }
+
+        .custom-appid button {
+            padding: 10px 16px; border-radius: 8px; border: none;
+            background: rgba(102, 192, 244, 0.15); color: var(--accent);
+            font-family: 'Orbitron', monospace; font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .custom-appid button:hover { background: var(--accent); color: #000; }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; padding: 14px 10px; text-align: center;
+        }
+
+        .stat-val {
+            font-family: 'Orbitron', monospace; font-size: 1.25rem; font-weight: 700;
+            color: var(--accent); margin-bottom: 4px;
+        }
+
+        .stat-lbl { font-size: 0.72rem; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Active games tag */
+        .active-games { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+        .active-game-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            background: rgba(27, 159, 255, 0.12); color: var(--steam-blue);
+            border: 1px solid rgba(27, 159, 255, 0.25);
+        }
+
+        .active-game-tag .tag-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--steam-blue);
+            animation: blink 1.5s infinite;
+        }
+
+        /* Error box */
+        .error-box {
+            background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3);
+            color: var(--red); border-radius: 10px; padding: 12px; font-size: 0.82rem;
+            margin-bottom: 14px; text-align: left;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top-color: #fff; animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .footer {
+            text-align: center; color: rgba(148, 163, 184, 0.4);
+            font-size: 0.72rem; margin-top: 30px; font-family: 'Orbitron', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo-row">
+                <div class="logo-icon">🎮</div>
+                <h1>STEAM IDLE PRO</h1>
+            </div>
+            <p>Çoklu Hesap • Steam Mobil QR Kod Girişi • 7/24 Kesintisiz Saat Kasma</p>
+        </div>
+
+        <!-- MASTER CONTROLS BAR (Hesaplar varsa görünür) -->
+        <div class="master-bar" id="masterBar" style="display: none;">
+            <div class="master-title">
+                <span>⚡</span> TOPLU HESAP YÖNETİMİ
+            </div>
+            <div class="master-btns">
+                <button class="btn-master btn-master-start" onclick="masterStartIdleAll()">
+                    ▶ TÜMÜNÜ BAŞLAT
+                </button>
+                <button class="btn-master btn-master-stop" onclick="masterStopIdleAll()">
+                    ⏹ TÜMÜNÜ DURDUR
+                </button>
+            </div>
+        </div>
+
+        <!-- ACCOUNTS TABS BAR -->
+        <div class="accounts-bar" id="accountsBar"></div>
+
+        <!-- SECTION 1: LOGIN (DUAL: QR LEFT + PASS RIGHT) -->
+        <div class="section active" id="loginSection">
+            <div class="card">
+                <div class="card-title">🔐 Steam Girişi Yap (Hesap Ekle)</div>
+
+                <div class="login-dual-grid">
+                    <!-- LEFT COLUMN: STEAM MOBILE QR CODE -->
+                    <div class="login-sub-box">
+                        <div style="font-family: 'Orbitron', monospace; font-size: 0.82rem; font-weight: 700; color: var(--accent); margin-bottom: 6px;">
+                            📱 STEAM MOBİL QR İLE GİRİŞ
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text2); margin-bottom: 12px;">
+                            En güvenli & en hızlı yöntem! Şifre yazmadan anında bağlan.
+                        </p>
+
+                        <div class="qr-box" id="qrBox">
+                            <div class="qr-scan-line"></div>
+                            <span class="spinner" style="width: 30px; height: 30px;"></span>
+                        </div>
+
+                        <div id="qrStatusMsg" style="font-size: 0.78rem; color: var(--text2); margin-top: 10px;">
+                            QR Kod Yükleniyor...
+                        </div>
+
+                        <div style="font-size: 0.72rem; color: var(--text2); margin-top: 10px; line-height: 1.4; text-align: left; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            1. Telefonunda <strong>Steam Mobil</strong> uygulamasını aç.<br>
+                            2. <strong>Steam Guard</strong> simgesine dokun.<br>
+                            3. <strong>QR Kodu Tara</strong> diyerek kodu okut!
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: USERNAME & PASSWORD -->
+                    <div class="login-sub-box">
+                        <div style="font-family: 'Orbitron', monospace; font-size: 0.82rem; font-weight: 700; color: var(--accent); margin-bottom: 6px;">
+                            🔑 ŞİFRE İLE MANUEL GİRİŞ
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text2); margin-bottom: 12px;">
+                            Geleneksel kullanıcı adı & şifre ile giriş yap:
+                        </p>
+
+                        <div id="loginError"></div>
+
+                        <div class="form-group">
+                            <label>Steam Kullanıcı Adı</label>
+                            <input type="text" id="username" placeholder="Kullanıcı adı gir..." autocomplete="off">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Şifre</label>
+                            <input type="password" id="password" placeholder="Şifreni gir...">
+                        </div>
+
+                        <button class="btn btn-primary" id="loginBtn" onclick="doLogin()" style="margin-top: 14px;">
+                            GİRİŞ YAP
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: STEAM GUARD INPUT -->
+        <div class="section" id="guardSection">
+            <div class="card">
+                <div class="card-title">🛡️ Steam Guard Kodu Gerekli</div>
+
+                <p style="color: var(--text2); margin-bottom: 16px; font-size: 0.88rem;" id="guardPrompt">
+                    5 haneli Steam Guard onay kodunu girin.
+                </p>
+
+                <div id="guardError"></div>
+
+                <div class="form-group" style="max-width: 300px; margin: 0 auto 16px auto;">
+                    <input type="text" id="guardCode" placeholder="XXXXX" maxlength="5"
+                           style="font-family: 'Orbitron', monospace; font-size: 1.6rem; text-align: center; letter-spacing: 8px; text-transform: uppercase;">
+                </div>
+
+                <div style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
+                    <button class="btn btn-primary" id="guardBtn" onclick="doSteamGuard()">
+                        KODU DOĞRULA
+                    </button>
+                    <button class="btn btn-danger" onclick="showAddAccountScreen()">
+                        İPTAL
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: DASHBOARD (SELECTED ACCOUNT) -->
+        <div class="section" id="dashSection">
+            <div class="card">
+                <div class="card-title">📊 Hesap Paneli</div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <span style="color: var(--text2); font-size: 0.78rem;">Aktif Hesap:</span>
+                        <div id="displayName" style="font-family: 'Orbitron', monospace; font-size: 1.15rem; font-weight: 700; color: var(--accent);">--</div>
+                    </div>
+                    <div>
+                        <span class="status-badge online" id="statusBadge">
+                            <span class="status-dot"></span>
+                            <span id="statusText">Çevrimiçi</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-val" id="uptimeDisplay">00:00:00</div>
+                        <div class="stat-lbl" id="uptimeLabel">İdle Süresi</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="gameCount">0</div>
+                        <div class="stat-lbl">Aktif Oyun</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="statusLabel">Bekliyor</div>
+                        <div class="stat-lbl">Durum</div>
+                    </div>
+                </div>
+
+                <!-- CANLI STEAM DOĞRULAMA & BİLGİLENDİRME KUTUSU -->
+                <div id="steamLiveBox" style="margin-top: 14px; padding: 14px 18px; border-radius: 12px; background: rgba(27, 159, 255, 0.06); border: 1px solid rgba(102, 192, 244, 0.25);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="liveDot" style="font-size: 1.2rem;">🔵</span>
+                            <div>
+                                <div style="font-size: 0.88rem; font-weight: 700; color: var(--accent);" id="liveTitle">Steam Durumu: Hazır</div>
+                                <div style="font-size: 0.78rem; color: var(--text2);" id="liveSubTitle">Oyunu başlatmak için aşağıdaki "IDLE BAŞLAT" butonuna bas.</div>
+                            </div>
+                        </div>
+                        <a id="steamProfileLink" href="#" target="_blank" style="display: none; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: linear-gradient(135deg, var(--steam-blue), var(--accent)); color: #fff; font-size: 0.75rem; font-weight: 700; text-decoration: none; box-shadow: 0 0 12px rgba(27,159,255,0.3); transition: all 0.2s;">
+                            <span>🌐 Steam Profilini Aç (Canlı Gör) ↗</span>
+                        </a>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08); font-size: 0.75rem; color: #94a3b8; line-height: 1.5;">
+                        ⚡ <strong>Steam Saat Mantığı:</strong> Steam profilindeki toplam saat sayacı saniye saniye değil, yaklaşık <strong>her 20-30 dakikada bir</strong> Steam sunucuları tarafından toplu artırılır. Profil linkine tıkladığında yeşil renkte <em>"Şu Anda Oyunda: Counter-Strike 2"</em> yazıyorsa saatlerin Steam tarafından sorunsuz sayılıyor demektir!
+                    </div>
+                </div>
+
+                <div class="active-games" id="activeGames"></div>
+            </div>
+
+            <!-- Game Selection Card -->
+            <div class="card">
+                <div class="card-title">🕹️ Oyun Seç (Bu Hesap İçin)</div>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input type="text" id="gameSearch" placeholder="🔍 Oyun ara (İsim veya App ID)..." oninput="renderGames(this.value)"
+                           style="flex: 1; padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 0.85rem; outline: none;">
+                    <button onclick="clearSelectedGames()" style="padding: 10px 14px; border-radius: 8px; border: none; background: rgba(248,113,113,0.15); color: var(--red); font-size: 0.75rem; font-weight: 600; cursor: pointer;">
+                        ✕ Seçimi Temizle
+                    </button>
+                </div>
+
+                <div class="games-grid" id="gamesGrid"></div>
+
+                <div class="custom-appid">
+                    <input type="number" id="customAppId" placeholder="Özel Steam App ID gir (Örn: 730)">
+                    <button onclick="addCustomAppId()">+ Ekle</button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-primary" style="flex: 2; min-width: 200px;" id="idleBtn" onclick="toggleActiveAccountIdle()">
+                    ▶ IDLE BAŞLAT
+                </button>
+                <button class="btn btn-danger" style="flex: 1; min-width: 140px;" onclick="doLogoutAccount()">
+                    🚪 HESABI KALDIR
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            Steam Idle Pro • Çoklu Hesap & QR Giriş • Bilgilerin Güvende
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // GLOBAL STATE
+        // ============================================================
+        let accountsList = [];
+        let activeUsername = null;
+        let selectedAppIds = new Set([730]); // Counter-Strike 2 varsayılan olarak seçili
+        let allGames = [];
+        let statusInterval = null;
+
+        // QR Code state
+        let currentQrSessionId = null;
+        let qrPollingInterval = null;
+        let qrCountdownInterval = null;
+        let qrCountdownSec = 60;
+
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function formatUptime(seconds) {
+            const sNum = parseInt(seconds) || 0;
+            const h = Math.floor(sNum / 3600);
+            const m = Math.floor((sNum % 3600) / 60);
+            const s = sNum % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        // ============================================================
+        // QR CODE LOGIN FLOW
+        // ============================================================
+        async function startQrLogin() {
+            if (qrPollingInterval) clearInterval(qrPollingInterval);
+            if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+            const qrBox = document.getElementById('qrBox');
+            const qrStatusMsg = document.getElementById('qrStatusMsg');
+
+            if (qrBox) {
+                qrBox.innerHTML = '<div class="qr-scan-line"></div><span class="spinner" style="width: 30px; height: 30px;"></span>';
+            }
+            if (qrStatusMsg) {
+                qrStatusMsg.innerHTML = '⏱️ Yenileniyor: <strong id="qrTimerVal" style="color: var(--orange);">60s</strong>';
+            }
+
+            try {
+                const res = await fetch('/api/qr-start', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    currentQrSessionId = data.qrSessionId;
+                    if (qrBox) {
+                        qrBox.innerHTML = `<div class="qr-scan-line"></div><img src="${data.qrDataUrl}" alt="Steam QR Login">`;
+                    }
+
+                    qrCountdownSec = 60;
+                    qrCountdownInterval = setInterval(() => {
+                        qrCountdownSec--;
+                        const t = document.getElementById('qrTimerVal');
+                        if (t) t.textContent = `${qrCountdownSec}s`;
+                        if (qrCountdownSec <= 0) {
+                            clearInterval(qrCountdownInterval);
+                            clearInterval(qrPollingInterval);
+                            startQrLogin();
+                        }
+                    }, 1000);
+
+                    qrPollingInterval = setInterval(async () => {
+                        try {
+                            const check = await fetch(`/api/qr-status?qrSessionId=${currentQrSessionId}`);
+                            const cData = await check.json();
+                            if (cData.authenticated) {
+                                clearInterval(qrPollingInterval);
+                                clearInterval(qrCountdownInterval);
+                                if (qrStatusMsg) {
+                                    qrStatusMsg.innerHTML = '<span style="color: var(--green); font-weight: 700;">✅ QR Başarıyla Tarandı!</span>';
+                                }
+                                await loadAccounts(cData.username);
+                            }
+                        } catch (e) {}
+                    }, 1500);
+                }
+            } catch (e) {
+                if (qrStatusMsg) qrStatusMsg.textContent = 'QR oluşturulamadı.';
+            }
+        }
+
+        // ============================================================
+        // USERNAME & PASSWORD LOGIN
+        // ============================================================
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const errDiv = document.getElementById('loginError');
+
+            if (!username || !password) {
+                errDiv.innerHTML = '<div class="error-box">Kullanıcı adı ve şifre girilmelidir</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> GİRİŞ YAPILIYOR...';
+            errDiv.innerHTML = '';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    await loadAccounts(username);
+                } else if (data.steamGuard) {
+                    activeUsername = username;
+                    const prompt = document.getElementById('guardPrompt');
+                    prompt.innerHTML = `<strong>[${username}]</strong> Hesabın için Steam Guard kodu gerekli. Kodu girin:`;
+                    showSection('guardSection');
+                } else {
+                    errDiv.innerHTML = `<div class="error-box">❌ ${data.error}</div>`;
+                }
+            } catch (e) {
+                errDiv.innerHTML = '<div class="error-box">Sunucuya bağlanılamadı</div>';
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'GİRİŞ YAP';
+        }
+
+        async function doSteamGuard() {
+            const code = document.getElementById('guardCode').value.trim();
+            const btn = document.getElementById('guardBtn');
+            const errDiv = document.getElementById('guardError');
+
+            if (!code) {
+                errDiv.innerHTML = '<div class="error-box">Kodu gir</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> DOĞRULANIYOR...';
+            errDiv.innerHTML = '';
+
+            try {
+                const res = await fetch('/api/steamguard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: activeUsername, code })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    await loadAccounts(activeUsername);
+                } else {
+                    errDiv.innerHTML = `<div class="error-box">❌ ${data.error}</div>`;
+                }
+            } catch (e) {
+                errDiv.innerHTML = '<div class="error-box">Sunucuya bağlanılamadı</div>';
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'KODU DOĞRULA';
+        }
+
+        function showAddAccountScreen() {
+            activeUsername = null;
+            renderAccountsBar();
+            showSection('loginSection');
+            startQrLogin();
+            document.getElementById('loginError').innerHTML = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // ============================================================
+        // ACCOUNTS MANAGEMENT & BAR
+        // ============================================================
+        async function loadAccounts(selectUser = null) {
+            try {
+                const res = await fetch('/api/accounts');
+                const data = await res.json();
+                accountsList = data.accounts || [];
+
+                renderAccountsBar();
+
+                if (accountsList.length > 0) {
+                    const target = selectUser || activeUsername || accountsList[0].username;
+                    selectAccount(target);
+                } else {
+                    showAddAccountScreen();
+                }
+            } catch (e) {}
+        }
+
+        function renderAccountsBar() {
+            const bar = document.getElementById('accountsBar');
+            const master = document.getElementById('masterBar');
+            bar.innerHTML = '';
+
+            if (accountsList.length > 0) {
+                master.style.display = 'flex';
+            } else {
+                master.style.display = 'none';
+            }
+
+            accountsList.forEach(acc => {
+                const tab = document.createElement('div');
+                const isSelected = acc.username.toLowerCase() === (activeUsername || '').toLowerCase();
+                tab.className = 'acc-tab' + (isSelected ? ' active' : '');
+                tab.onclick = () => selectAccount(acc.username);
+
+                const statusDot = (acc.games && acc.games.length > 0) ? '🟢' : (acc.loggedIn ? '🔵' : '🔴');
+                const sub = (acc.games && acc.games.length > 0) ? `(${acc.games.length} oyun)` : (acc.loggedIn ? 'Online' : 'Offline');
+
+                tab.innerHTML = `<span>${statusDot}</span> <span>${acc.persona || acc.username}</span> <small style="color:var(--text2);">${sub}</small>`;
+                bar.appendChild(tab);
+            });
+
+            // "+ Yeni Hesap Ekle" Butonu
+            const addBtn = document.createElement('div');
+            addBtn.className = 'acc-tab acc-tab-add';
+            addBtn.onclick = () => showAddAccountScreen();
+            addBtn.innerHTML = '➕ YENİ HESAP EKLE';
+            bar.appendChild(addBtn);
+        }
+
+        async function selectAccount(username) {
+            activeUsername = username;
+            renderAccountsBar();
+
+            try {
+                const res = await fetch(`/api/status?username=${encodeURIComponent(username)}`);
+                const data = await res.json();
+
+                if (data.success || data.loggedIn !== undefined) {
+                    showSection('dashSection');
+                    document.getElementById('displayName').textContent = data.persona || data.username;
+
+                    // Steam profile linki
+                    const profileLink = document.getElementById('steamProfileLink');
+                    if (data.steamID) {
+                        profileLink.href = `https://steamcommunity.com/profiles/${data.steamID}`;
+                        profileLink.style.display = 'inline-flex';
+                    } else {
+                        profileLink.style.display = 'none';
+                    }
+
+                    // Hesaptaki tespit edilen oyunları yükle
+                    if (data.ownedGames && data.ownedGames.length > 0) {
+                        allGames = data.ownedGames;
+                    }
+
+                    selectedAppIds.clear();
+                    if (data.games && data.games.length > 0) {
+                        data.games.forEach(id => selectedAppIds.add(Number(id)));
+                    } else {
+                        // Varsayılan olarak CS2 (730) seçili olsun
+                        selectedAppIds.add(730);
+                    }
+
+                    updateActiveAccountBadge(data);
+                    renderGames();
+                    updateActiveGames();
+                    updateIdleBtn();
+                }
+            } catch (e) {}
+        }
+
+        function updateActiveAccountBadge(data) {
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            const label = document.getElementById('statusLabel');
+            const count = document.getElementById('gameCount');
+            const uptime = document.getElementById('uptimeDisplay');
+            const uptimeLbl = document.getElementById('uptimeLabel');
+            const liveDot = document.getElementById('liveDot');
+            const liveTitle = document.getElementById('liveTitle');
+            const liveSubTitle = document.getElementById('liveSubTitle');
+
+            const isIdling = data.games && data.games.length > 0;
+
+            if (isIdling) {
+                badge.className = 'status-badge idling';
+                text.textContent = 'Saat Kasılıyor';
+                label.textContent = '🔥 Kasıyor!';
+                count.textContent = data.games.length;
+                uptime.textContent = formatUptime(data.uptime || 0);
+                if (uptimeLbl) uptimeLbl.textContent = 'Kasılan Süre';
+
+                const gameNames = data.games.map(id => {
+                    const g = allGames.find(x => x.appId === Number(id));
+                    return g ? g.name : `#${id}`;
+                }).join(', ');
+
+                if (liveDot) liveDot.textContent = '🟢';
+                if (liveTitle) liveTitle.innerHTML = `Steam'de Aktif Oynanıyor: <span style="color:var(--green);">${gameNames}</span>`;
+                if (liveSubTitle) liveSubTitle.textContent = 'Oyun saatleriniz Steam sunucularında şu an başarıyla birikmektedir.';
+            } else if (data.loggedIn) {
+                badge.className = 'status-badge online';
+                text.textContent = 'Çevrimiçi';
+                label.textContent = 'Hazır';
+                count.textContent = '0';
+                uptime.textContent = '00:00:00';
+                if (uptimeLbl) uptimeLbl.textContent = 'İdle Süresi';
+
+                if (liveDot) liveDot.textContent = '🔵';
+                if (liveTitle) liveTitle.textContent = 'Steam Durumu: Hazır';
+                if (liveSubTitle) liveSubTitle.textContent = 'Oyunu başlatmak için aşağıdaki yeşil "IDLE BAŞLAT" butonuna bas.';
+            } else {
+                badge.className = 'status-badge offline';
+                text.textContent = 'Çevrimdışı';
+                label.textContent = 'Bağlantı Yok';
+                count.textContent = '0';
+                uptime.textContent = '00:00:00';
+
+                if (liveDot) liveDot.textContent = '🔴';
+                if (liveTitle) liveTitle.textContent = 'Steam Durumu: Çevrimdışı';
+                if (liveSubTitle) liveSubTitle.textContent = 'Bağlantı koptu. Lütfen yeniden giriş yapın.';
+            }
+        }
+
+        // ============================================================
+        // GAMES LIST & SELECTION
+        // ============================================================
+        async function loadPopularGames() {
+            try {
+                const res = await fetch('/api/games');
+                allGames = await res.json();
+                renderGames();
+            } catch (e) {}
+        }
+
+        function clearSelectedGames() {
+            selectedAppIds.clear();
+            renderGames();
+            updateActiveGames();
+            updateIdleBtn();
+        }
+
+        function renderGames(filterText = '') {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '';
+
+            const q = String(filterText || '').toLowerCase().trim();
+            const filtered = q
+                ? allGames.filter(g => (g.name && g.name.toLowerCase().includes(q)) || String(g.appId).includes(q))
+                : allGames;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text2); padding: 20px;">Oyun bulunamadı. Aşağıdan App ID ile ekleyebilirsiniz.</div>';
+                return;
+            }
+
+            filtered.forEach(game => {
+                const isSelected = selectedAppIds.has(game.appId);
+                const div = document.createElement('div');
+                div.className = 'game-item' + (isSelected ? ' selected' : '');
+                div.onclick = () => toggleGame(game.appId);
+                div.innerHTML = `
+                    <div class="game-check"></div>
+                    <span class="game-label">${game.name}</span>
+                    <span class="game-id">${game.appId}</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function toggleGame(appId) {
+            if (selectedAppIds.has(appId)) {
+                selectedAppIds.delete(appId);
+            } else {
+                if (selectedAppIds.size >= 32) {
+                    alert('En fazla 32 oyun seçebilirsin!');
+                    return;
+                }
+                selectedAppIds.add(appId);
+            }
+            const searchVal = document.getElementById('gameSearch') ? document.getElementById('gameSearch').value : '';
+            renderGames(searchVal);
+            updateActiveGames();
+            updateIdleBtn();
+        }
+
+        function addCustomAppId() {
+            const input = document.getElementById('customAppId');
+            const id = parseInt(input.value);
+            if (!id || id <= 0) return;
+
+            if (!allGames.find(g => g.appId === id)) {
+                allGames.unshift({ appId: id, name: `Oyun #${id}` });
+            }
+            selectedAppIds.add(id);
+            input.value = '';
+            const searchVal = document.getElementById('gameSearch') ? document.getElementById('gameSearch').value : '';
+            renderGames(searchVal);
+            updateActiveGames();
+            updateIdleBtn();
+        }
+
+        function updateIdleBtn() {
+            const btn = document.getElementById('idleBtn');
+            const curAcc = accountsList.find(a => a.username.toLowerCase() === (activeUsername || '').toLowerCase());
+            const isIdling = curAcc && curAcc.games && curAcc.games.length > 0;
+
+            if (isIdling) {
+                btn.innerHTML = '⏹ IDLE DURDUR';
+                btn.className = 'btn btn-danger';
+            } else {
+                const count = selectedAppIds.size > 0 ? selectedAppIds.size : 1;
+                btn.innerHTML = `▶ IDLE BAŞLAT (${count} Oyun)`;
+                btn.className = 'btn btn-success';
+                btn.disabled = false;
+            }
+        }
+
+        function updateActiveGames() {
+            const container = document.getElementById('activeGames');
+            container.innerHTML = '';
+
+            selectedAppIds.forEach(id => {
+                const game = allGames.find(g => g.appId === id);
+                const name = game ? game.name : `#${id}`;
+                container.innerHTML += `
+                    <span class="active-game-tag">
+                        <span class="tag-dot"></span>
+                        ${name}
+                    </span>
+                `;
+            });
+        }
+
+        // ============================================================
+        // SINGLE & MASTER IDLE CONTROLS
+        // ============================================================
+        async function toggleActiveAccountIdle() {
+            if (!activeUsername) return;
+            const curAcc = accountsList.find(a => a.username.toLowerCase() === activeUsername.toLowerCase());
+            const isIdling = curAcc && curAcc.games && curAcc.games.length > 0;
+
+            if (isIdling) {
+                try {
+                    await fetch('/api/stop', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: activeUsername })
+                    });
+                    await loadAccounts(activeUsername);
+                } catch (e) {}
+            } else {
+                if (selectedAppIds.size === 0) {
+                    selectedAppIds.add(730);
+                    renderGames();
+                }
+                try {
+                    const res = await fetch('/api/idle', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: activeUsername, appIds: [...selectedAppIds] })
+                    });
+                    const resData = await res.json();
+                    if (!resData.success) {
+                        alert('Hata: ' + (resData.error || 'Oyun başlatılamadı'));
+                    }
+                    await loadAccounts(activeUsername);
+                } catch (e) {
+                    alert('Sunucuya bağlanılamadı');
+                }
+            }
+        }
+
+        async function masterStartIdleAll() {
+            if (accountsList.length === 0) return;
+            if (!confirm('Tüm açık hesaplarda aynı anda saat kasma başlatılsın mı?')) return;
+
+            try {
+                await fetch('/api/idle-all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ appIds: [730] })
+                });
+                await loadAccounts(activeUsername);
+            } catch (e) {}
+        }
+
+        async function masterStopIdleAll() {
+            if (!confirm('Tüm hesaplardaki saat kasma durdurulsun mu?')) return;
+
+            try {
+                await fetch('/api/stop-all', { method: 'POST' });
+                await loadAccounts(activeUsername);
+            } catch (e) {}
+        }
+
+        async function doLogoutAccount() {
+            if (!activeUsername) return;
+            if (!confirm(`[${activeUsername}] hesabını kaldırmak istediğinize emin misiniz?`)) return;
+
+            try {
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: activeUsername })
+                });
+                activeUsername = null;
+                await loadAccounts();
+            } catch (e) {}
+        }
+
+        // ============================================================
+        // REALTIME STATUS POLLING
+        // ============================================================
+        function startRealtimePolling() {
+            if (statusInterval) clearInterval(statusInterval);
+            statusInterval = setInterval(async () => {
+                if (activeUsername) {
+                    try {
+                        const res = await fetch(`/api/status?username=${encodeURIComponent(activeUsername)}`);
+                        const data = await res.json();
+                        if (data.success || data.loggedIn !== undefined) {
+                            updateActiveAccountBadge(data);
+
+                            const accInList = accountsList.find(a => a.username.toLowerCase() === activeUsername.toLowerCase());
+                            if (accInList) {
+                                accInList.games = data.games || [];
+                                accInList.loggedIn = data.loggedIn;
+                                updateIdleBtn();
+                                renderAccountsBar();
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }, 2000);
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        async function init() {
+            await loadPopularGames();
+            await loadAccounts();
+            startRealtimePolling();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            init();
+            document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('guardCode').addEventListener('keydown', e => { if (e.key === 'Enter') doSteamGuard(); });
+        });
+    </script>
+</body>
+</html>

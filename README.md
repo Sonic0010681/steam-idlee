@@ -1,2 +1,2 @@
-# steam-idlee
-steam-idlee
+# steam-idle
+steam-idle
